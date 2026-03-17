@@ -2417,7 +2417,8 @@ b
         <div style="font-size:0.75rem;">Une fois téléchargé, glisse-dépose le fichier ici pour l’afficher.</div>
       </div>
     `;
-    triggerCsvDownload(url);
+    // Chrome: plus fiable que l'iframe caché pour déclencher un téléchargement
+    window.location.href = url;
   }
 
   searchBtn.addEventListener("click", () => {
