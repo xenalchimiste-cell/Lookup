@@ -1,0 +1,2459 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>ZSearcher – Interface Web</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-card: #0f172a;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59,130,246,0.2);
+      --accent-strong: rgba(59,130,246,0.6);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --danger: #ef4444;
+      --border-radius: 12px;
+      --shadow-soft: 0 18px 40px rgba(15,23,42,0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+      "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1d2b45 0, #050816 45%, #020617 100%);
+      color: var(--text-main);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1200px;
+      background: radial-gradient(circle at top left, rgba(59,130,246,0.1), transparent 60%),
+                  radial-gradient(circle at bottom right, rgba(139,92,246,0.1), transparent 60%),
+                  rgba(15,23,42,0.96);
+      border-radius: 24px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(148,163,184,0.18);
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+
+    .header {
+      padding: 22px 26px 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-size: 1.65rem;
+      font-weight: 650;
+      letter-spacing: 0.01em;
+      line-height: 1.1;
+    }
+
+    .page-subtitle {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .top-pill {
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: rgba(2,6,23,0.55);
+      border: 1px solid rgba(55,65,81,0.8);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 92px;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    /* Drawer (navigateur) à droite */
+    .right-drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,6,23,0.55);
+      display: none;
+      justify-content: flex-end;
+      align-items: stretch;
+      z-index: 46;
+    }
+
+    .right-drawer-backdrop.open {
+      display: flex;
+    }
+
+    .right-drawer {
+      width: min(420px, 92vw);
+      height: 100%;
+      background: radial-gradient(circle at top, rgba(99,102,241,0.18), transparent 55%),
+                  rgba(15,23,42,0.98);
+      border-left: 1px solid rgba(55,65,81,0.9);
+      box-shadow: -20px 0 60px rgba(15,23,42,0.9);
+      padding: 14px 14px 16px;
+      transform: translateX(100%);
+      transition: transform 0.18s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .right-drawer-backdrop.open .right-drawer {
+      transform: translateX(0);
+    }
+
+    .right-drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .right-drawer-title {
+      font-size: 0.95rem;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+    }
+
+    .right-drawer-close {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 12px;
+    }
+
+    .right-drawer-close:hover {
+      background: rgba(31,41,55,0.9);
+      color: #e5e7eb;
+    }
+
+    .right-drawer-body {
+      border-radius: 16px;
+      border: 1px solid rgba(55,65,81,0.7);
+      background: rgba(2,6,23,0.25);
+      padding: 10px 10px 12px;
+      overflow: auto;
+      flex: 1;
+      min-height: 220px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .pill-count {
+      background: rgba(148,163,184,0.14);
+      border: 1px solid rgba(148,163,184,0.22);
+      border-radius: 10px;
+      padding: 1px 8px;
+      color: #e5e7eb;
+      font-size: 0.78rem;
+    }
+
+    .header-left p {
+      margin-top: 0;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .panel-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(55,65,81,0.7);
+      background: rgba(2,6,23,0.4);
+    }
+
+    .tab {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      padding: 7px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      color: #e5e7eb;
+      background: rgba(99,102,241,0.18);
+      border-color: rgba(99,102,241,0.35);
+      box-shadow: 0 0 0 1px rgba(99,102,241,0.18);
+    }
+
+    .search-mini {
+      position: relative;
+      min-width: 240px;
+      flex: 1;
+      max-width: 420px;
+    }
+
+    .search-mini input {
+      padding-left: 34px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .chip {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34,197,94,0.8);
+    }
+
+    .content {
+      display: flex;
+      justify-content: center;
+      padding: 32px 24px 28px;
+    }
+
+    .panel {
+      max-width: 1100px;
+      width: 100%;
+      background: rgba(15,23,42,0.96);
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.22);
+      padding: 20px 22px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top center, rgba(59,130,246,0.12), transparent 55%);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .panel-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .panel-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      max-width: 260px;
+    }
+
+    .params-toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    select,
+    input[type="text"] {
+      background: rgba(15,23,42,0.96);
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,0.45);
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      outline: none;
+      min-width: 0;
+      width: 100%;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, transform 0.08s ease;
+    }
+
+    select:focus,
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+      background: rgba(15,23,42,1);
+      transform: translateY(-0.5px);
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+      box-shadow: 0 12px 25px rgba(37,99,235,0.45);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 35px rgba(37,99,235,0.65);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-main);
+      border: 1px solid rgba(148,163,184,0.35);
+    }
+
+    .btn-outline:hover {
+      background: rgba(15,23,42,0.95);
+    }
+
+    .btn-icon-only {
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.9);
+      color: var(--text-muted);
+    }
+
+    .btn-icon-only:hover {
+      background: rgba(239,68,68,0.1);
+      color: #fca5a5;
+      border-color: rgba(248,113,113,0.8);
+    }
+
+    .categories {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .category {
+      border-radius: 16px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(30,64,175,0.45);
+      overflow: hidden;
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 0.83rem;
+      color: var(--text-main);
+    }
+
+    .category-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-toggle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: transform 0.15s ease;
+    }
+
+    .category[data-open="false"] .category-body {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .category[data-open="false"] .category-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .category-body {
+      padding: 10px 12px 12px;
+      border-top: 1px solid rgba(30,64,175,0.45);
+      max-height: 1000px;
+      transition: max-height 0.18s ease, opacity 0.18s ease, padding 0.18s ease;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-4, .grid-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-group label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .fuzzy-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px dashed rgba(148,163,184,0.4);
+      margin-top: 4px;
+    }
+
+    .fuzzy-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: rgba(15,23,42,0.9);
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+b
+    .switch-slider::before {
+      content: "";
+      position: absolute;
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #e5e7eb;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(15,23,42,0.8);
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .switch input:checked + .switch-slider {
+      background: radial-gradient(circle at 20% 20%, rgba(56,189,248,0.6), rgba(59,130,246,0.9));
+      border-color: rgba(96,165,250,0.9);
+    }
+
+    .switch input:checked + .switch-slider::before {
+      transform: translateX(16px);
+      background-color: white;
+    }
+
+    .fuzzy-label-main {
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .fuzzy-label-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .actions-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .link-preview {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .link-preview span {
+      color: var(--accent-strong);
+    }
+
+    .results-shell {
+      margin-top: 22px;
+      border-radius: 20px;
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(31,41,55,0.9);
+      box-shadow: 0 18px 40px rgba(15,23,42,0.8);
+      padding: 14px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .results-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .results-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .results-body {
+      min-height: 140px;
+      border-radius: 16px;
+      border: 1px dashed rgba(55,65,81,0.9);
+      background: radial-gradient(circle at top, rgba(15,23,42,1), rgba(15,23,42,0.96));
+      padding: 16px 14px;
+      overflow: auto;
+    }
+
+    .results-body.drag-over {
+      border-style: solid;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+      background: radial-gradient(circle at top, rgba(30,64,175,0.9), rgba(15,23,42,0.98));
+    }
+
+    .results-empty {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .results-empty-icon {
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+
+    .result-card {
+      border-radius: 14px;
+      border: 1px solid rgba(55,65,81,0.9);
+      background: rgba(15,23,42,0.98);
+      padding: 14px 16px;
+      font-size: 0.82rem;
+    }
+
+    .result-card + .result-card {
+      margin-top: 8px;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .result-name {
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: 0.02em;
+    }
+
+    .btn-approfondir {
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+
+    .modal {
+      width: min(480px, 100% - 32px);
+      background: radial-gradient(circle at top, rgba(30,64,175,0.25), transparent 55%),
+                  rgba(15,23,42,0.98);
+      border-radius: 18px;
+      border: 1px solid rgba(55,65,81,0.9);
+      box-shadow: 0 24px 60px rgba(15,23,42,0.9);
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .modal-close {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 999px;
+    }
+
+    .modal-close:hover {
+      background: rgba(31,41,55,0.9);
+      color: #e5e7eb;
+    }
+
+    .modal-body {
+      max-height: 260px;
+      overflow: auto;
+      padding-top: 4px;
+      font-size: 0.8rem;
+    }
+
+    .related-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .related-item:hover {
+      background: rgba(31,41,55,0.9);
+    }
+
+    .related-name {
+      color: var(--text-main);
+    }
+
+    .related-reason {
+      font-size: 0.72rem;
+      color: #a5b4fc;
+      white-space: nowrap;
+    }
+
+    .result-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .result-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .result-section {
+      border-radius: 14px;
+      border: 1px solid rgba(55,65,81,0.7);
+      background: rgba(2,6,23,0.35);
+      padding: 10px 10px 12px;
+    }
+
+    .result-section-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 8px 12px;
+    }
+
+    .result-field-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .result-field-value {
+      font-size: 0.78rem;
+      color: var(--text-main);
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .result-field-value a {
+      color: #93c5fd;
+      text-decoration: none;
+    }
+
+    .result-field-value a:hover {
+      text-decoration: underline;
+    }
+
+    .result-card.highlight-focus {
+      box-shadow: 0 0 0 1px var(--accent), 0 18px 40px rgba(37,99,235,0.35);
+      border-color: var(--accent);
+    }
+
+    /* Right panel (results) */
+    .results-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .results-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .results-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .results-meta-badge {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.35);
+    }
+
+    .results-card {
+      flex: 1;
+      min-height: 200px;
+      background: rgba(15,23,42,0.9);
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.22);
+      padding: 10px 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      gap: 10px;
+    }
+
+    .status-text-strong {
+      color: #a5b4fc;
+    }
+
+    .status-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.3);
+      font-size: 0.75rem;
+    }
+
+    .status-pill.success {
+      border-color: rgba(34,197,94,0.6);
+      color: #4ade80;
+    }
+
+    .status-pill.error {
+      border-color: rgba(248,113,113,0.8);
+      color: #fecaca;
+    }
+
+    .status-pill.idle {
+      color: var(--text-muted);
+    }
+
+    .results-container {
+      flex: 1;
+      border-radius: 14px;
+      border: 1px dashed rgba(148,163,184,0.45);
+      padding: 6px;
+      overflow: auto;
+      background: radial-gradient(circle at top, rgba(15,23,42,0.98), rgba(15,23,42,0.94));
+      font-size: 0.8rem;
+      position: relative;
+    }
+
+    .results-placeholder {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--text-muted);
+      padding: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: linear-gradient(to bottom, rgba(15,23,42,0.98), rgba(15,23,42,0.94));
+    }
+
+    th, td {
+      text-align: left;
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(30,64,175,0.4);
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+    }
+
+    th:hover {
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+    }
+
+    th .sort-indicator {
+      margin-left: 4px;
+      font-size: 0.7rem;
+      opacity: 0.9;
+      color: var(--accent);
+    }
+
+    tbody tr:hover {
+      background: rgba(15,23,42,0.85);
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(15,23,42,0.7);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      border: 1px solid rgba(148,163,184,0.4);
+      background: rgba(15,23,42,0.95);
+      color: var(--text-muted);
+    }
+
+    .tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #eab308;
+    }
+
+    .error-text {
+      font-size: 0.8rem;
+      color: #fecaca;
+      margin-top: 4px;
+    }
+
+    .url-copied {
+      font-size: 0.75rem;
+      color: #bbf7d0;
+      display: none;
+    }
+
+    .url-copied.show {
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="header">
+    <div class="header-left">
+      <div class="page-title">Recherche</div>
+      <div class="page-subtitle">Interrogez l’ensemble des bases indexées</div>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-outline" id="ficheHeaderBtn" type="button" style="font-size:0.8rem;">
+        Fiche
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- PANEL UNIQUE : FORMULAIRE (style proche du screen) -->
+    <div class="panel">
+      <div class="panel-inner">
+        <!-- Topbar (comme le screen) -->
+        <div class="panel-topbar">
+          <div class="tabs" role="tablist" aria-label="Mode de recherche">
+            <button class="tab active" type="button">Recherche</button>
+            <button class="tab" type="button">Recherche française</button>
+            <button class="tab" type="button">Email &amp; Mot de passe</button>
+          </div>
+          <div class="search-mini">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Recherche" aria-label="Recherche rapide (non utilisée)">
+          </div>
+        </div>
+
+        <div class="categories">
+          <!-- Bloc Etat civil -->
+          <div class="category" data-open="true">
+            <div class="category-header">
+              <div class="category-title">
+                <span>👤</span>
+                <span>État civil</span>
+              </div>
+              <span class="category-toggle">▾</span>
+            </div>
+            <div class="category-body grid-4">
+            <div class="field-group">
+              <label>Nom</label>
+              <input type="text" data-param="nom" placeholder="Dupont">
+            </div>
+            <div class="field-group">
+              <label>Prénom</label>
+              <input type="text" data-param="prenom" placeholder="Jean">
+            </div>
+            <div class="field-group">
+              <label>Nom de naissance</label>
+              <input type="text" data-param="nomnaiss" placeholder="Martin">
+            </div>
+            <div class="field-group">
+              <label>Nom affiché</label>
+              <input type="text" data-param="nomaffiche" placeholder="Jean Dupont">
+            </div>
+            <div class="field-group">
+              <label>Jour de naissance</label>
+              <input type="text" data-param="journaiss" placeholder="10">
+            </div>
+            <div class="field-group">
+              <label>Mois de naissance</label>
+              <input type="text" data-param="moisnaiss" placeholder="10">
+            </div>
+            <div class="field-group">
+              <label>Année de naissance</label>
+              <input type="text" data-param="anneenaiss" placeholder="1990">
+            </div>  
+          </div>
+          </div>
+
+          <!-- Bloc Origine -->
+          <div class="category" data-open="false">
+            <div class="category-header">
+              <div class="category-title">
+                <span>🌍</span>
+                <span>Origine</span>
+              </div>
+              <span class="category-toggle">▾</span>
+            </div>
+            <div class="category-body grid-3">
+            <div class="field-group">
+              <label>Pays</label>
+              <input type="text" data-param="pays" placeholder="France">
+            </div>
+            <div class="field-group">
+              <label>Ville de naissance</label>
+              <input type="text" data-param="ville_naiss" placeholder="Paris">
+            </div>
+            <div class="field-group">
+              <label>Nationalité</label>
+              <input type="text" data-param="nationalite" placeholder="Française">
+            </div>
+          </div>
+          </div>
+
+          <!-- Bloc Coordonnées -->
+          <div class="category" data-open="false">
+            <div class="category-header">
+              <div class="category-title">
+                <span>☎️</span>
+                <span>Coordonnées</span>
+              </div>
+              <span class="category-toggle">▾</span>
+            </div>
+            <div class="category-body grid-3">
+            <div class="field-group">
+              <label>Email</label>
+              <input type="text" data-param="email" placeholder="jean.dupont@example.com">
+            </div>
+            <div class="field-group">
+              <label>Téléphone</label>
+              <input type="text" data-param="tel" placeholder="+33 6 12 34 56 78">
+            </div>
+            <div class="field-group">
+              <label>Téléphone fixe</label>
+              <input type="text" data-param="tel_fixe" placeholder="+33 1 23 45 67 89">
+            </div>
+          </div>
+          </div>
+
+          <!-- Bloc Adresse -->
+          <div class="category" data-open="false">
+            <div class="category-header">
+              <div class="category-title">
+                <span>🏠</span>
+                <span>Adresse</span>
+              </div>
+              <span class="category-toggle">▾</span>
+            </div>
+            <div class="category-body grid-4">
+            <div class="field-group">
+              <label>Adresse</label>
+              <input type="text" data-param="adresse" placeholder="12 rue Exemple">
+            </div>
+            <div class="field-group">
+              <label>Code postal</label>
+              <input type="text" data-param="postal" placeholder="75001">
+            </div>
+            <div class="field-group">
+              <label>Ville</label>
+              <input type="text" data-param="ville" placeholder="Paris">
+            </div>
+            <div class="field-group">
+              <label>IP</label>
+              <input type="text" data-param="ip" placeholder="1.2.3.4">
+            </div>
+          </div>
+          </div>
+
+          <!-- Bloc Jeux & Réseaux -->
+          <div class="category" data-open="false">
+            <div class="category-header">
+              <div class="category-title">
+                <span>🎮</span>
+                <span>Jeux & Réseaux</span>
+              </div>
+              <span class="category-toggle">▾</span>
+            </div>
+            <div class="category-body grid-4">
+            <div class="field-group">
+              <label>Discord ID</label>
+              <input type="text" data-param="discord_id" placeholder="1234567890">
+            </div>
+            <div class="field-group">
+              <label>Twitter</label>
+              <input type="text" data-param="twitter" placeholder="@handle">
+            </div>
+            <div class="field-group">
+              <label>Snapchat</label>
+              <input type="text" data-param="snapchat" placeholder="snap.user">
+            </div>
+            <div class="field-group">
+              <label>Steam</label>
+              <input type="text" data-param="steam" placeholder="steam_id">
+            </div>
+            <div class="field-group">
+              <label>Minecraft</label>
+              <input type="text" data-param="minecraft" placeholder="pseudo">
+            </div>
+            <div class="field-group">
+              <label>FiveM</label>
+              <input type="text" data-param="fivem" placeholder="identifiant">
+            </div>
+          </div>
+          </div>
+
+          <!-- Bloc Autres données -->
+          <div class="category" data-open="false">
+            <div class="category-header">
+              <div class="category-title">
+                <span>➕</span>
+                <span>Autres données</span>
+              </div>
+              <span class="category-toggle">▾</span>
+            </div>
+            <div class="category-body grid-3">
+            <div class="field-group">
+              <label>IBAN</label>
+              <input type="text" data-param="iban" placeholder="FR76 **** **** ****">
+            </div>
+            <div class="field-group">
+              <label>Plaque</label>
+              <input type="text" data-param="plaque" placeholder="AA-123-BB">
+            </div>
+            <div class="field-group">
+              <label>Profession</label>
+              <input type="text" data-param="profession" placeholder="Développeur">
+            </div>
+            <div class="field-group">
+              <label>Employeur</label>
+              <input type="text" data-param="employeur" placeholder="Entreprise">
+            </div>
+            <div class="field-group">
+              <label>Username</label>
+              <input type="text" data-param="username" placeholder="user123">
+            </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fuzzy-row">
+          <div class="fuzzy-left">
+            <label class="switch">
+              <input type="checkbox" id="fuzzyCheckbox">
+              <span class="switch-slider"></span>
+            </label>
+            <div>
+              <div class="fuzzy-label-main">Recherche flexible (fuzzy)</div>
+              <div class="fuzzy-label-sub">
+                Active une recherche plus tolérante aux fautes (fuzzy=1).
+              </div>
+            </div>
+          </div>
+          <div class="tag">
+            <span class="tag-dot"></span>
+            fuzzy=1 quand activé
+          </div>
+        </div>
+
+        <div class="actions-row">
+          <div style="display:flex; flex-direction:column; gap:4px; max-width: 60%;">
+            <button id="searchBtn" class="btn btn-primary">
+              Rechercher
+            </button>
+            <div class="link-preview" id="urlPreview">
+              URL: <span>en attente de paramètres…</span>
+            </div>
+            <span class="url-copied" id="urlCopied">URL copiée dans le presse-papier</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+            <button id="resetBtn" class="btn btn-outline" style="font-size: 0.78rem;">
+              Effacer
+            </button>
+            <button id="copyUrlBtn" class="btn btn-outline" style="font-size: 0.78rem;">
+              Copier l’URL uniquement
+            </button>
+          </div>
+        </div>
+
+        <div class="results-shell">
+          <div class="results-topbar">
+            <div id="resultsSummary">Aucun résultat à afficher.</div>
+            <div class="results-actions">
+              <label class="btn btn-outline" style="font-size:0.78rem; cursor:pointer;">
+                Importer un CSV
+                <input type="file" id="csvInput" accept=".csv,text/csv" style="display:none;">
+              </label>
+              <button id="exportCsvBtn" class="btn btn-outline" style="font-size:0.78rem;">
+                Exporter CSV
+              </button>
+            </div>
+          </div>
+          <div class="results-body" id="resultsBody">
+            <div class="results-empty">
+              <div class="results-empty-icon">🔍</div>
+              <div>Aucun résultat pour l’instant.</div>
+              <div style="font-size:0.75rem;">Lance une recherche, télécharge l’export puis importe le CSV ici.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="relatedModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="relatedModalTitle">Profils liés</div>
+      <button class="modal-close" id="relatedModalClose">✕</button>
+    </div>
+    <div class="modal-body" id="relatedModalBody">
+      <!-- items dynamiques -->
+    </div>
+  </div>
+</div>
+
+<div class="right-drawer-backdrop" id="ficheDrawer">
+  <div class="right-drawer" role="dialog" aria-label="Navigateur de fiches">
+    <div class="right-drawer-header">
+      <div class="right-drawer-title">Fiche</div>
+      <button class="right-drawer-close" id="ficheDrawerClose" type="button">✕</button>
+    </div>
+    <div class="right-drawer-body" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div style="color:#9ca3af;font-size:0.82rem;">
+          Résultats ajoutés à la fiche: <strong id="ficheCount" style="color:#e5e7eb;">0</strong>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+          <button class="btn btn-outline" id="ficheExportTxt" type="button" style="font-size:0.78rem;">Exporter TXT</button>
+          <button class="btn btn-outline" id="ficheExportPdf" type="button" style="font-size:0.78rem;">Exporter PDF</button>
+          <button class="btn btn-outline" id="ficheClear" type="button" style="font-size:0.78rem;">Vider</button>
+        </div>
+      </div>
+
+      <div id="ficheList" style="border-radius:16px;border:1px solid rgba(55,65,81,0.7);background:rgba(2,6,23,0.25);padding:8px;overflow:auto;max-height:34vh;">
+        <div style="color:#9ca3af;font-size:0.85rem;padding:6px 8px;">Aucun résultat dans la fiche.</div>
+      </div>
+
+      <div id="fichePreview" style="border-radius:16px;border:1px solid rgba(55,65,81,0.7);background:rgba(2,6,23,0.18);padding:10px 10px 12px;overflow:auto;flex:1;min-height:240px;">
+        <div style="color:#9ca3af;font-size:0.85rem;">Sélectionne un élément pour voir le détail.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // === CONFIGURATION : URL d'export brute (comme mess.py) ==
+  // === CONFIGURATION : URL d'export brute ===
+  const EXPORT_BASE_URL = "https://zsearcher.fr/search/export";
+
+  const fuzzyCheckbox = document.getElementById("fuzzyCheckbox");
+  const searchBtn = document.getElementById("searchBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const copyUrlBtn = document.getElementById("copyUrlBtn");
+  const urlPreview = document.getElementById("urlPreview").querySelector("span");
+  const urlCopied = document.getElementById("urlCopied");
+  const categories = document.querySelectorAll(".category");
+  const csvInput = document.getElementById("csvInput");
+  const exportCsvBtn = document.getElementById("exportCsvBtn");
+  const resultsBody = document.getElementById("resultsBody");
+  const resultsSummary = document.getElementById("resultsSummary");
+  const relatedModal = document.getElementById("relatedModal");
+  const relatedModalClose = document.getElementById("relatedModalClose");
+  const relatedModalBody = document.getElementById("relatedModalBody");
+  const relatedModalTitle = document.getElementById("relatedModalTitle");
+  const ficheHeaderBtn = document.getElementById("ficheHeaderBtn");
+  const ficheDrawer = document.getElementById("ficheDrawer");
+  const ficheDrawerClose = document.getElementById("ficheDrawerClose");
+  const ficheList = document.getElementById("ficheList");
+  const fichePreview = document.getElementById("fichePreview");
+  const ficheCount = document.getElementById("ficheCount");
+  const ficheExportTxt = document.getElementById("ficheExportTxt");
+  const ficheExportPdf = document.getElementById("ficheExportPdf");
+  const ficheClear = document.getElementById("ficheClear");
+
+  let lastCsvText = "";
+  let lastParsed = [];
+  let ficheItems = [];
+  let activeFicheItemId = null;
+
+  const FICHE_STORAGE_KEY = "zsearcher_fiche_items_v1";
+
+  function saveFicheItems() {
+    try {
+      localStorage.setItem(FICHE_STORAGE_KEY, JSON.stringify(ficheItems));
+    } catch (_) {}
+  }
+
+  function loadFicheItems() {
+    try {
+      const raw = localStorage.getItem(FICHE_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function formatDateBirth(value) {
+    if (!value) return "";
+    const raw = String(value);
+    return raw.includes("T") ? raw.split("T")[0] : raw;
+  }
+
+  function normalizeDisplayItem(rawItem) {
+    const item = { ...rawItem };
+    if (item.allocataire && typeof item.allocataire === "object") {
+      const a = item.allocataire;
+      const ident = [a.qualite, a.nom, a.prenom].filter(Boolean).join(" ").trim();
+      if (ident) item.allocataire = ident;
+      if (a.telephone && !item.telephone) item.telephone = a.telephone;
+      if (a.courriel && !item.Email) item.Email = a.courriel;
+    }
+    if (item.adresse && typeof item.adresse === "object") {
+      const ad = item.adresse;
+      const segments = [ad.voie || ad.ligne, [ad.code_postal, ad.ville].filter(Boolean).join(" "), ad.pays]
+        .filter(Boolean).join(" · ");
+      item.adresse = segments || JSON.stringify(ad);
+    }
+    if (!item.ville_naiss) item.ville_naiss = rawItem.ville_naiss || rawItem["Lieu de naissance"] || "";
+    if (item.date_naissance) item.date_naissance = formatDateBirth(item.date_naissance);
+    return item;
+  }
+
+  function buildFicheItemFromResultIndex(idx) {
+    const rawItem = lastParsed[idx];
+    if (!rawItem) return null;
+    const item = normalizeDisplayItem(rawItem);
+
+    const nom = item.nom || item.Nom || "";
+    const prenom = item.prenom || item.Prénom || "";
+    const title = (nom || prenom) ? `${prenom} ${nom}`.trim() : `Résultat ${idx + 1}`;
+
+    const perso = {
+      nom: item.nom || "",
+      prenom: item.prenom || "",
+      date_naissance: item.date_naissance || "",
+      ville_naiss: item.ville_naiss || "",
+      genre: item.genre || "",
+      telephone: item.telephone || item.Phone || item.Phone1 || "",
+      email: item.Email || "",
+      adresse: item.adresse || "",
+      organisme: item.organisme || "",
+      situation: item.situation || "",
+      id: item.id || "",
+      id_psp: item.id_psp || "",
+    };
+
+    const famille = findRelated(idx).map(r => {
+      const it = normalizeDisplayItem(r.item);
+      return {
+        nom: it.nom || it.Nom || "",
+        prenom: it.prenom || it.Prénom || "",
+        date_naissance: it.date_naissance || "",
+        ville_naiss: it.ville_naiss || "",
+        telephone: it.telephone || it.Phone || it.Phone1 || "",
+        email: it.Email || "",
+        adresse: it.adresse || "",
+        reason: r.reason || "",
+        score: r.score || 0,
+      };
+    });
+
+    return {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      createdAt: new Date().toISOString(),
+      title,
+      perso,
+      famille,
+    };
+  }
+
+  function updateFicheUi() {
+    if (ficheCount) ficheCount.textContent = String(ficheItems.length);
+    if (ficheHeaderBtn) {
+      ficheHeaderBtn.textContent = `Fiche (${ficheItems.length})`;
+    }
+  }
+
+  function renderFicheList() {
+    if (!ficheList) return;
+    ficheList.innerHTML = "";
+    if (!ficheItems.length) {
+      ficheList.innerHTML = `<div style="color:#9ca3af;font-size:0.85rem;padding:6px 8px;">Aucun résultat dans la fiche.</div>`;
+      return;
+    }
+    ficheItems
+      .slice()
+      .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""))
+      .forEach((f) => {
+        const div = document.createElement("div");
+        div.className = "fiche-item";
+        div.style.padding = "8px 10px";
+        div.style.borderRadius = "12px";
+        div.style.cursor = "pointer";
+        div.style.display = "flex";
+        div.style.flexDirection = "column";
+        div.style.gap = "2px";
+        div.style.border = f.id === activeFicheItemId ? "1px solid rgba(99,102,241,0.5)" : "1px solid transparent";
+        div.style.background = f.id === activeFicheItemId ? "rgba(99,102,241,0.12)" : "transparent";
+        div.dataset.id = f.id;
+        div.innerHTML = `
+          <div style="color:#e5e7eb;font-weight:650;font-size:0.82rem;">${escapeHtml(f.title)}</div>
+          <div style="color:#9ca3af;font-size:0.72rem;">${escapeHtml((f.createdAt || "").slice(0,19).replace("T"," "))}</div>
+        `;
+        ficheList.appendChild(div);
+      });
+  }
+
+  function renderFichePreview() {
+    if (!fichePreview) return;
+    const fiche = ficheItems.find(f => f.id === activeFicheItemId);
+    if (!fiche) {
+      fichePreview.innerHTML = `<div style="color:#9ca3af;font-size:0.85rem;">Sélectionne un élément pour voir le détail.</div>`;
+      return;
+    }
+
+    const p = fiche.perso || {};
+    const famille = fiche.famille || [];
+
+    const kv = (k, v) => `
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:6px 10px;padding:6px 0;border-bottom:1px solid rgba(55,65,81,0.35);">
+        <div style="color:#9ca3af;font-size:0.72rem;text-transform:uppercase;letter-spacing:.06em;">${escapeHtml(k)}</div>
+        <div style="color:#e5e7eb;font-size:0.82rem;word-break:break-word;">${escapeHtml(v || "")}</div>
+      </div>
+    `;
+
+    const persoHtml = [
+      kv("nom", p.nom),
+      kv("prenom", p.prenom),
+      kv("date_naissance", p.date_naissance),
+      kv("ville_naiss", p.ville_naiss),
+      kv("telephone", p.telephone),
+      kv("email", p.email),
+      kv("adresse", p.adresse),
+      kv("genre", p.genre),
+      kv("organisme", p.organisme),
+      kv("situation", p.situation),
+      kv("id", p.id),
+      kv("id_psp", p.id_psp),
+    ].join("");
+
+    const familleHtml = famille.length
+      ? famille.slice(0, 50).map(m => `
+          <div style="padding:8px 10px;border-radius:12px;border:1px solid rgba(55,65,81,0.55);background:rgba(2,6,23,0.2);margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+              <div style="color:#e5e7eb;font-weight:650;">${escapeHtml(`${m.prenom||""} ${m.nom||""}`.trim() || "Profil")}</div>
+              <div style="color:#a5b4fc;font-size:0.72rem;">${escapeHtml(m.reason || "")}</div>
+            </div>
+            <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;">
+              <div>${kv("date_naissance", m.date_naissance).replaceAll("border-bottom:1px solid rgba(55,65,81,0.35);","")}</div>
+              <div>${kv("ville_naiss", m.ville_naiss).replaceAll("border-bottom:1px solid rgba(55,65,81,0.35);","")}</div>
+              <div>${kv("telephone", m.telephone).replaceAll("border-bottom:1px solid rgba(55,65,81,0.35);","")}</div>
+              <div>${kv("email", m.email).replaceAll("border-bottom:1px solid rgba(55,65,81,0.35);","")}</div>
+            </div>
+          </div>
+        `).join("")
+      : `<div style="color:#9ca3af;font-size:0.85rem;">Aucun membre lié détecté.</div>`;
+
+    fichePreview.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+        <div style="font-weight:750;font-size:0.95rem;color:#e5e7eb;">${escapeHtml(fiche.title)}</div>
+        <button class="btn btn-outline" type="button" id="ficheRemove" style="font-size:0.78rem;">Supprimer</button>
+      </div>
+      <div style="color:#9ca3af;font-size:0.74rem;margin-top:2px;">${escapeHtml((fiche.createdAt||"").slice(0,19).replace("T"," "))}</div>
+      <div style="margin-top:10px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;">Info perso</div>
+      ${persoHtml}
+      <div style="margin-top:12px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;">Info famille</div>
+      ${familleHtml}
+    `;
+
+    const rm = document.getElementById("ficheRemove");
+    if (rm) {
+      rm.addEventListener("click", () => {
+        ficheItems = ficheItems.filter(x => x.id !== fiche.id);
+        activeFicheItemId = ficheItems[0]?.id || null;
+        saveFicheItems();
+        updateFicheUi();
+        renderFicheList();
+        renderFichePreview();
+      });
+    }
+  }
+
+  ficheList?.addEventListener("click", (e) => {
+    const row = e.target.closest("[data-id]");
+    if (!row) return;
+    activeFicheItemId = row.dataset.id;
+    renderFicheList();
+    renderFichePreview();
+  });
+
+  ficheExportTxt?.addEventListener("click", () => {
+    const fiche = ficheItems.find(f => f.id === activeFicheItemId) || ficheItems[0];
+    if (!fiche) return;
+    const blob = new Blob([ficheToTxt(fiche)], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(fiche.title || "fiche").replaceAll("/", "-")}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  function ficheLogoSvg() {
+    // Logo simple (neutre) pour la fiche
+    return `
+      <svg width="54" height="54" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="g" x1="10" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#6366F1"/>
+            <stop offset="1" stop-color="#3B82F6"/>
+          </linearGradient>
+        </defs>
+        <path d="M32 6l8.2 16.6L58 25.1 45 37.8 48.1 56 32 47.6 15.9 56 19 37.8 6 25.1l17.8-2.5L32 6z" fill="url(#g)" opacity="0.95"/>
+        <path d="M32 18l4.9 10 11 1.6-8 7.8 1.9 11-9.8-5.1-9.8 5.1 1.9-11-8-7.8 11-1.6L32 18z" fill="rgba(2,6,23,0.55)"/>
+      </svg>
+    `;
+  }
+
+  function ficheToTxt(f) {
+    const p = f.perso || {};
+    const fam = f.famille || [];
+    const L = [];
+    const W = 60; // largeur intérieure de la boîte
+
+    // ── Helpers ──
+    const pad = (s, len) => s + ' '.repeat(Math.max(0, len - s.length));
+    const center = (s, len) => {
+      const left = Math.floor((len - s.length) / 2);
+      const right = len - s.length - left;
+      return ' '.repeat(Math.max(0, left)) + s + ' '.repeat(Math.max(0, right));
+    };
+    const boxTop    = '╔' + '═'.repeat(W) + '╗';
+    const boxBot    = '╚' + '═'.repeat(W) + '╝';
+    const boxMid    = '╠' + '═'.repeat(W) + '╣';
+    const boxLine   = (txt) => '║ ' + pad(txt, W - 2) + ' ║';
+    const boxCenter = (txt) => '║' + center(txt, W) + '║';
+    const boxEmpty  = '║' + ' '.repeat(W) + '║';
+    const thinSep   = '╟' + '─'.repeat(W) + '╢';
+    const subTop    = '┌' + '─'.repeat(W - 4) + '┐';
+    const subBot    = '└' + '─'.repeat(W - 4) + '┘';
+    const subLine   = (txt) => '│ ' + pad(txt, W - 6) + ' │';
+
+    // ══════════════════════════════════════════════════════════
+    //  LOGO ASCII ART "ZSearcher"
+    // ══════════════════════════════════════════════════════════
+    L.push('');
+    L.push('     ╔════════════════════════════════════════════╗');
+    L.push('     ║            ┌──────────────────┐            ║');
+    L.push('     ║            │   ╱╱╱╱╱╱╱╱╱╱╱╱   │            ║');
+    L.push('     ║            │          ╱╱╱╱     │            ║');
+    L.push('     ║            │       ╱╱╱╱        │            ║');
+    L.push('     ║            │    ╱╱╱╱           │            ║');
+    L.push('     ║            │   ╱╱╱╱╱╱╱╱╱╱╱╱   │            ║');
+    L.push('     ║            └──────────────────┘            ║');
+    L.push('     ║                                            ║');
+    L.push('     ║    ███████ ███████  █████  ██████   ██████ ║');
+    L.push('     ║       ██  ██      ██   ██ ██   ██ ██      ║');
+    L.push('     ║      ██  ███████ ███████  ██████  ██      ║');
+    L.push('     ║     ██       ██ ██   ██ ██   ██ ██      ║');
+    L.push('     ║    ███████ ███████ ██   ██ ██   ██  ██████ ║');
+    L.push('     ║          ──── Z S E A R C H E R ────       ║');
+    L.push('     ╚════════════════════════════════════════════╝');
+    L.push('');
+
+    // ══════════════════════════════════════════════════════════
+    //  EN-TÊTE DE FICHE
+    // ══════════════════════════════════════════════════════════
+    L.push(boxTop);
+    L.push(boxCenter('F I C H E   C O N T A C T'));
+    L.push(boxMid);
+    L.push(boxLine(`Nom de la fiche : ${f.title || 'N/A'}`));
+    const dateStr = (f.createdAt || '').slice(0, 19).replace('T', ' ');
+    L.push(boxLine(`Date de création : ${dateStr || 'N/A'}`));
+    L.push(boxBot);
+    L.push('');
+
+    // ══════════════════════════════════════════════════════════
+    //  SECTION : INFORMATIONS PERSONNELLES
+    // ══════════════════════════════════════════════════════════
+    const order = [
+      ['nom',             'Nom'],
+      ['prenom',          'Prénom'],
+      ['date_naissance',  'Date de naissance'],
+      ['ville_naiss',     'Ville de naissance'],
+      ['genre',           'Genre'],
+      ['telephone',       'Téléphone'],
+      ['email',           'Email'],
+      ['adresse',         'Adresse'],
+      ['organisme',       'Organisme'],
+      ['situation',       'Situation'],
+      ['id',              'Identifiant'],
+      ['id_psp',          'ID PSP'],
+    ];
+
+    const persoEntries = order.filter(([k]) => p[k]);
+
+    L.push(boxTop);
+    L.push(boxCenter('INFORMATIONS PERSONNELLES'));
+    L.push(boxMid);
+
+    if (!persoEntries.length) {
+      L.push(boxLine('Aucune donnée disponible.'));
+    } else {
+      const maxLabel = Math.max(...persoEntries.map(([, label]) => label.length));
+      persoEntries.forEach(([k, label], i) => {
+        const paddedLabel = pad(label, maxLabel);
+        L.push(boxLine(`  ${paddedLabel}  │  ${p[k]}`));
+        if (i < persoEntries.length - 1) L.push(thinSep);
+      });
+    }
+    L.push(boxBot);
+    L.push('');
+
+    // ══════════════════════════════════════════════════════════
+    //  SECTION : PROFILS LIÉS / FAMILLE
+    // ══════════════════════════════════════════════════════════
+    L.push(boxTop);
+    L.push(boxCenter('PROFILS LIÉS / FAMILLE'));
+    L.push(boxMid);
+
+    if (!fam.length) {
+      L.push(boxLine('Aucun profil lié détecté.'));
+    } else {
+      fam.forEach((m, idx) => {
+        const who = `${m.prenom || ''} ${m.nom || ''}`.trim() || 'Profil inconnu';
+        const reason = m.reason ? ` (${m.reason})` : '';
+
+        if (idx > 0) L.push(thinSep);
+        L.push(boxLine(`  ► ${who}${reason}`));
+        L.push(boxLine(''));
+
+        const memberFields = [
+          ['Date naissance', m.date_naissance],
+          ['Ville naissance', m.ville_naiss],
+          ['Téléphone', m.telephone],
+          ['Email', m.email],
+          ['Adresse', m.adresse],
+        ].filter(([, v]) => v);
+
+        if (memberFields.length) {
+          const maxLbl = Math.max(...memberFields.map(([lbl]) => lbl.length));
+          memberFields.forEach(([lbl, val]) => {
+            const pLbl = pad(lbl, maxLbl);
+            L.push(boxLine(`      ${pLbl}  :  ${val}`));
+          });
+        } else {
+          L.push(boxLine('      Aucune info complémentaire.'));
+        }
+      });
+    }
+    L.push(boxBot);
+    L.push('');
+
+    // ══════════════════════════════════════════════════════════
+    //  PIED DE PAGE
+    // ══════════════════════════════════════════════════════════
+    const footerLine = `Généré par ZSearcher  •  ${dateStr}`;
+    L.push('─'.repeat(W + 2));
+    L.push(center(footerLine, W + 2));
+    L.push('─'.repeat(W + 2));
+    L.push('');
+
+    return L.join('\n');
+  }
+
+  function openFichePrint(f) {
+    const p = f.perso || {};
+    const fam = f.famille || [];
+    const row = (k, v) => `
+      <div class="kv">
+        <div class="k">${escapeHtml(k)}</div>
+        <div class="v">${escapeHtml(v || "")}</div>
+      </div>
+    `;
+    const persoRows = [
+      ["Nom", p.nom], ["Prénom", p.prenom],
+      ["Date de naissance", p.date_naissance], ["Ville de naissance", p.ville_naiss],
+      ["Téléphone", p.telephone], ["Email", p.email],
+      ["Adresse", p.adresse],
+      ["Organisme", p.organisme], ["Situation", p.situation],
+      ["ID", p.id], ["ID_PSP", p.id_psp],
+    ].filter(([, v]) => v).map(([k, v]) => row(k, v)).join("");
+
+    const famHtml = fam.length
+      ? fam.map(m => {
+          const who = `${m.prenom || ""} ${m.nom || ""}`.trim() || "Profil";
+          return `
+            <div class="card">
+              <div class="cardTitle">${escapeHtml(who)}</div>
+              <div class="cardSub">${escapeHtml(m.reason || "")}</div>
+              <div class="grid2">
+                ${m.telephone ? row("Téléphone", m.telephone) : ""}
+                ${m.email ? row("Email", m.email) : ""}
+                ${m.adresse ? row("Adresse", m.adresse) : ""}
+              </div>
+            </div>
+          `;
+        }).join("")
+      : `<div class="muted">Aucun profil lié.</div>`;
+
+    const html = `
+      <div class="top">
+        <div class="logo">${ficheLogoSvg()}</div>
+        <div>
+          <div class="h1">${escapeHtml(f.title || "Fiche")}</div>
+          <div class="muted">Fiche contact (CRM) • ${escapeHtml((f.createdAt || "").slice(0, 19).replace("T"," "))}</div>
+        </div>
+      </div>
+
+      <div class="sectionTitle">INFO PERSO</div>
+      <div class="section">
+        ${persoRows || `<div class="muted">Aucune donnée.</div>`}
+      </div>
+
+      <div class="sectionTitle">INFO FAMILLE</div>
+      <div class="section">
+        ${famHtml}
+      </div>
+    `;
+
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.open();
+    w.document.write(`
+      <!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>${escapeHtml(f.title || "Fiche")}</title>
+        <style>
+          body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; padding: 22px; color: #0f172a; }
+          .top { display:flex; gap:14px; align-items:center; margin-bottom: 14px; }
+          .logo { width:54px; height:54px; display:flex; align-items:center; justify-content:center; }
+          .h1 { font-size: 18px; font-weight: 750; margin: 0; }
+          .muted { color:#64748b; font-size: 12px; }
+          .sectionTitle { margin-top: 16px; font-size: 12px; text-transform: uppercase; letter-spacing: .10em; color:#334155; }
+          .section { margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; }
+          .kv { display:grid; grid-template-columns: 160px 1fr; gap: 8px 12px; padding: 6px 0; border-bottom: 1px solid #e2e8f0; }
+          .kv:last-child { border-bottom: none; }
+          .k { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color:#64748b; }
+          .v { font-size: 13px; color:#0f172a; white-space: pre-wrap; word-break: break-word; }
+          .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-top: 10px; }
+          .cardTitle { font-weight: 700; font-size: 13px; }
+          .cardSub { color:#64748b; font-size: 12px; margin-top: 2px; }
+          .grid2 { display:grid; grid-template-columns: 1fr; gap: 6px; margin-top: 8px; }
+        </style>
+      </head>
+      <body>
+        ${html}
+        <script>window.onload = () => { window.print(); }<\/script>
+      </body>
+      </html>
+    `);
+    w.document.close();
+  }
+
+  ficheExportPdf?.addEventListener("click", () => {
+    const fiche = ficheItems.find(f => f.id === activeFicheItemId) || ficheItems[0];
+    if (!fiche) return;
+    openFichePrint(fiche);
+  });
+
+  ficheClear?.addEventListener("click", () => {
+    ficheItems = [];
+    activeFicheItemId = null;
+    saveFicheItems();
+    updateFicheUi();
+    renderFicheList();
+    renderFichePreview();
+  });
+
+  // init fiche items
+  ficheItems = loadFicheItems();
+  activeFicheItemId = ficheItems[0]?.id || null;
+  updateFicheUi();
+  renderFicheList();
+  renderFichePreview();
+
+  // --- Liaisons (Approfondir) ---
+  function collectKeysForLinking(item) {
+    const fullNames = new Set();
+    const lastNames = new Set();
+    const phones = new Set();
+    const emails = new Set();
+    const postals = new Set();
+    const addresses = new Set();
+
+    const pushIf = (val, set) => {
+      if (val == null) return;
+      const v = String(val).trim();
+      if (v) set.add(v);
+    };
+
+    const nom = item?.nom || item?.Nom || "";
+    const prenom = item?.prenom || item?.Prénom || "";
+    const full = [prenom, nom].filter(Boolean).join(" ").trim();
+    if (full) fullNames.add(full);
+    if (nom) lastNames.add(String(nom).trim().toUpperCase());
+
+    pushIf(item?.telephone, phones);
+    pushIf(item?.Phone, phones);
+    pushIf(item?.Phone1, phones);
+    pushIf(item?.Email, emails);
+    pushIf(item?.email, emails);
+
+    if (item?.allocataire && typeof item.allocataire === "object") {
+      const a = item.allocataire;
+      const aNom = a.nom || "";
+      const aPrenom = a.prenom || "";
+      const aFull = [aPrenom, aNom].filter(Boolean).join(" ").trim();
+      if (aFull) fullNames.add(aFull);
+      if (aNom) lastNames.add(String(aNom).trim().toUpperCase());
+      pushIf(a.telephone, phones);
+      pushIf(a.telephone_fixe, phones);
+      pushIf(a.courriel, emails);
+      pushIf(a.email, emails);
+    }
+
+    if (item?.adresse && typeof item.adresse === "object") {
+      const ad = item.adresse;
+      pushIf(ad.code_postal || ad["Code postal"], postals);
+      const voie = ad.voie || ad.ligne || "";
+      const cp = ad.code_postal || ad["Code postal"] || "";
+      const ville = ad.ville || ad["Bureau distributeur"] || "";
+      const addr = [voie, [cp, ville].filter(Boolean).join(" ")].filter(Boolean).join(" ");
+      pushIf(addr, addresses);
+    } else if (item?.adresse) {
+      pushIf(item.adresse, addresses);
+      const m = String(item.adresse).match(/\b\d{5}\b/);
+      if (m) pushIf(m[0], postals);
+    }
+
+    pushIf(item?.postal, postals);
+    pushIf(item?.["Code postal"], postals);
+
+    return { fullNames, lastNames, phones, emails, postals, addresses };
+  }
+
+  function findRelated(idx) {
+    if (!lastParsed || !lastParsed[idx]) return [];
+    const base = lastParsed[idx];
+    const baseKeys = collectKeysForLinking(base);
+
+    const related = [];
+    lastParsed.forEach((other, j) => {
+      if (j === idx) return;
+      const otherKeys = collectKeysForLinking(other);
+      const reasons = [];
+      let score = 0;
+
+      baseKeys.lastNames.forEach((n) => {
+        if (otherKeys.lastNames.has(n)) {
+          reasons.push(`nom de famille partagé (${n})`);
+          score += 5;
+        }
+      });
+      baseKeys.fullNames.forEach((n) => {
+        if (otherKeys.fullNames.has(n)) {
+          reasons.push(`nom complet identique (${n})`);
+          score += 4;
+        }
+      });
+      baseKeys.phones.forEach((p) => {
+        if (otherKeys.phones.has(p)) {
+          reasons.push(`téléphone partagé (${p})`);
+          score += 3;
+        }
+      });
+      baseKeys.emails.forEach((m) => {
+        if (otherKeys.emails.has(m)) {
+          reasons.push(`email partagé (${m})`);
+          score += 3;
+        }
+      });
+      baseKeys.addresses.forEach((a) => {
+        if (otherKeys.addresses.has(a)) {
+          reasons.push(`adresse partagée`);
+          score += 2;
+        }
+      });
+      baseKeys.postals.forEach((cp) => {
+        if (otherKeys.postals.has(cp)) {
+          reasons.push(`code postal partagé (${cp})`);
+          score += 1;
+        }
+      });
+
+      if (score > 0) {
+        related.push({
+          index: j,
+          item: other,
+          reason: Array.from(new Set(reasons)).join(", "),
+          score,
+        });
+      }
+    });
+
+    related.sort((a, b) => b.score - a.score);
+    return related;
+  }
+
+  function openRelatedModal(baseIndex) {
+    const baseItem = lastParsed?.[baseIndex];
+    if (!baseItem) return;
+    const rel = findRelated(baseIndex);
+    relatedModalBody.innerHTML = "";
+
+    const nom = baseItem.nom || baseItem.Nom || "";
+    const prenom = baseItem.prenom || baseItem.Prénom || "";
+    const who = (nom || prenom) ? `${prenom} ${nom}`.trim() : `#${baseIndex + 1}`;
+    relatedModalTitle.textContent = `Profils liés à ${who}`;
+
+    if (!rel.length) {
+      const div = document.createElement("div");
+      div.style.fontSize = "0.8rem";
+      div.style.color = "#9ca3af";
+      div.textContent = "Aucun profil lié trouvé.";
+      relatedModalBody.appendChild(div);
+    } else {
+      rel.forEach(({ index, item, reason }) => {
+        const row = document.createElement("div");
+        row.className = "related-item";
+        row.dataset.index = String(index);
+
+        const name = document.createElement("div");
+        name.className = "related-name";
+        const n = item.nom || item.Nom || "";
+        const p = item.prenom || item.Prénom || "";
+        name.textContent = (n || p) ? `${p} ${n}`.trim() : `#${index + 1}`;
+
+        const why = document.createElement("div");
+        why.className = "related-reason";
+        why.textContent = reason;
+
+        row.appendChild(name);
+        row.appendChild(why);
+        relatedModalBody.appendChild(row);
+      });
+    }
+
+    relatedModal.style.display = "flex";
+  }
+
+  // Sécurité: s'assure que la pop-up est fermée au chargement
+  if (relatedModal) relatedModal.style.display = "none";
+
+  // ESC ferme la pop-up
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (relatedModal && relatedModal.style.display === "flex") relatedModal.style.display = "none";
+    if (ficheDrawer && ficheDrawer.classList.contains("open")) ficheDrawer.classList.remove("open");
+  });
+
+  function openFicheDrawer() {
+    if (!ficheDrawer) return;
+    ficheDrawer.classList.add("open");
+  }
+
+  function closeFicheDrawer() {
+    if (!ficheDrawer) return;
+    ficheDrawer.classList.remove("open");
+  }
+
+  if (ficheHeaderBtn) {
+    ficheHeaderBtn.addEventListener("click", () => {
+      if (ficheDrawer.classList.contains("open")) closeFicheDrawer();
+      else openFicheDrawer();
+    });
+  }
+
+  if (ficheDrawerClose) {
+    ficheDrawerClose.addEventListener("click", closeFicheDrawer);
+  }
+
+  if (ficheDrawer) {
+    ficheDrawer.addEventListener("click", (e) => {
+      if (e.target === ficheDrawer) closeFicheDrawer();
+    });
+  }
+
+  fuzzyCheckbox.addEventListener("change", updateUrlPreview);
+
+  function buildParamsObject() {
+    const params = {};
+    const queryParts = [];
+
+    document.querySelectorAll("[data-param]").forEach(input => {
+      const value = input.value.trim();
+      if (!value) return;
+      const key = input.dataset.param;
+      if (!key) return;
+      params[key] = value;
+      queryParts.push(value);
+    });
+
+    if (queryParts.length > 0) {
+      params.query = queryParts.join("+");
+    }
+
+    params.fuzzy = fuzzyCheckbox.checked ? "1" : "0";
+
+    return params;
+  }
+
+  // Accordéons des catégories
+  categories.forEach(cat => {
+    const header = cat.querySelector(".category-header");
+    header.addEventListener("click", () => {
+      const open = cat.getAttribute("data-open") !== "false";
+      cat.setAttribute("data-open", open ? "false" : "true");
+    });
+  });
+
+  function parseExportCsv(text) {
+    const lines = (text || "")
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+
+    const out = [];
+    for (const line of lines) {
+      if (line.startsWith("#")) continue;
+      const firstComma = line.indexOf(",");
+      if (firstComma === -1) continue;
+      const idxStr = line.slice(0, firstComma).trim();
+      let rest = line.slice(firstComma + 1).trim();
+
+      if (rest.startsWith('"{"') && rest.endsWith('}"')) {
+        const inner = rest.slice(1, -1).replace(/""/g, '"');
+        try {
+          const obj = JSON.parse(inner);
+          obj._index = idxStr;
+          out.push(obj);
+          continue;
+        } catch (_) {}
+      }
+
+      out.push({ _index: idxStr, ligne: rest });
+    }
+    return out;
+  }
+
+  function renderResults(data) {
+    resultsBody.innerHTML = "";
+
+    if (!data || data.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "results-empty";
+      empty.innerHTML = `
+        <div class="results-empty-icon">🔍</div>
+        <div>Aucun résultat à afficher.</div>
+        <div style="font-size:0.75rem;">Vérifie les critères ou l’export CSV.</div>
+      `;
+      resultsBody.appendChild(empty);
+      resultsSummary.textContent = "0 résultat.";
+      return;
+    }
+
+    resultsSummary.textContent = `${data.length} résultat${data.length > 1 ? "s" : ""} dans l’export.`;
+
+    data.forEach((item, idx) => {
+      const card = document.createElement("div");
+      card.className = "result-card";
+      card.dataset.index = String(idx);
+
+      const header = document.createElement("div");
+      header.className = "result-header";
+
+      const name = document.createElement("div");
+      name.className = "result-name";
+      const nom = item.nom || item.Nom || "";
+      const prenom = item.prenom || item.Prénom || "";
+      name.textContent = nom || prenom ? `${prenom} ${nom}`.trim() : `Résultat ${idx + 1}`;
+
+      const right = document.createElement("div");
+      right.style.display = "flex";
+      right.style.alignItems = "center";
+      right.style.gap = "6px";
+
+      const index = document.createElement("div");
+      index.style.fontSize = "0.7rem";
+      index.style.color = "#9ca3af";
+      index.textContent = `#${item._index || idx + 1}`;
+
+      const deepenBtn = document.createElement("button");
+      deepenBtn.type = "button";
+      deepenBtn.className = "btn btn-outline btn-approfondir";
+      deepenBtn.textContent = "Approfondir";
+      deepenBtn.dataset.index = String(idx);
+
+      const addToFicheBtn = document.createElement("button");
+      addToFicheBtn.type = "button";
+      addToFicheBtn.className = "btn btn-primary btn-add-fiche";
+      addToFicheBtn.style.fontSize = "0.72rem";
+      addToFicheBtn.style.padding = "4px 10px";
+      addToFicheBtn.textContent = "Ajouter à la fiche";
+      addToFicheBtn.dataset.index = String(idx);
+
+      right.appendChild(index);
+      right.appendChild(deepenBtn);
+      right.appendChild(addToFicheBtn);
+
+      header.appendChild(name);
+      header.appendChild(right);
+
+      const grid = document.createElement("div");
+      grid.className = "result-grid";
+
+      const displayItem = { ...item };
+      if (displayItem.allocataire && typeof displayItem.allocataire === "object") {
+        const a = displayItem.allocataire;
+        const ident = [a.qualite, a.nom, a.prenom].filter(Boolean).join(" ").trim();
+        if (ident) displayItem.allocataire = ident;
+        if (a.telephone && !displayItem.telephone) displayItem.telephone = a.telephone;
+        if (a.courriel && !displayItem.Email) displayItem.Email = a.courriel;
+      }
+      if (displayItem.adresse && typeof displayItem.adresse === "object") {
+        const ad = displayItem.adresse;
+        const segments = [ad.voie || ad.ligne, [ad.code_postal, ad.ville].filter(Boolean).join(" "), ad.pays]
+          .filter(Boolean).join(" · ");
+        displayItem.adresse = segments || JSON.stringify(ad);
+      }
+      if (!displayItem.ville_naiss) displayItem.ville_naiss = item.ville_naiss || item["Lieu de naissance"] || "";
+
+      Object.entries(displayItem).forEach(([key, value]) => {
+        if (key === "_index" || !value) return;
+        const allowed = ["id","id_psp","nom","prenom","date_naissance","ville_naiss","genre","organisme","situation","nom_complet","allocataire","adresse","telephone","Phone","Phone1","Email"];
+        if (!allowed.includes(key)) return;
+
+        const field = document.createElement("div");
+        const label = document.createElement("div");
+        label.className = "result-field-label";
+        label.textContent = key === "ville_naiss" ? "ville_naiss (naissance)" : key;
+
+        const val = document.createElement("div");
+        val.className = "result-field-value";
+
+        if (key === "date_naissance") {
+          const base = String(value).includes("T") ? value.split("T")[0] : value;
+          val.textContent = base;
+        } else if (key === "adresse") {
+          const link = document.createElement("a");
+          link.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(value);
+          link.target = "_blank";
+          link.textContent = value;
+          link.style.color = "#60a5fa";
+          link.style.textDecoration = "underline";
+          val.appendChild(link);
+        } else {
+          val.textContent = value;
+        }
+
+        field.appendChild(label);
+        field.appendChild(val);
+        grid.appendChild(field);
+      });
+
+      card.appendChild(header);
+      card.appendChild(grid);
+      resultsBody.appendChild(card);
+    });
+  }
+
+  // Clics sur les cartes résultats: Approfondir
+  resultsBody.addEventListener("click", (e) => {
+    const deepen = e.target.closest(".btn-approfondir");
+    if (deepen) {
+      const idx = Number(deepen.dataset.index || "-1");
+      if (!Number.isNaN(idx)) openRelatedModal(idx);
+      return;
+    }
+    const add = e.target.closest("[data-index]");
+    if (add && add.classList && add.classList.contains("btn-add-fiche")) {
+      const idx = Number(add.dataset.index || "-1");
+      if (Number.isNaN(idx)) return;
+      const fiche = buildFicheItemFromResultIndex(idx);
+      if (!fiche) return;
+      ficheItems.push(fiche);
+      activeFicheItemId = fiche.id;
+      saveFicheItems();
+      updateFicheUi();
+      renderFicheList();
+      renderFichePreview();
+      openFicheDrawer();
+    }
+  });
+
+  // Pop-up Approfondir: clic sur une personne => focus la carte
+  relatedModalBody.addEventListener("click", (e) => {
+    const row = e.target.closest(".related-item");
+    if (!row) return;
+    const idx = Number(row.dataset.index || "-1");
+    if (Number.isNaN(idx)) return;
+    relatedModal.style.display = "none";
+    const card = resultsBody.querySelector(`.result-card[data-index="${idx}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      card.classList.add("highlight-focus");
+      setTimeout(() => card.classList.remove("highlight-focus"), 1200);
+    }
+  });
+
+  relatedModalClose.addEventListener("click", () => {
+    relatedModal.style.display = "none";
+  });
+  relatedModal.addEventListener("click", (e) => {
+    if (e.target === relatedModal) relatedModal.style.display = "none";
+  });
+
+  // Onglets (UI only) : active state
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+    });
+  });
+
+  csvInput.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || "");
+      if (!isLikelyZsearcherCsv(text)) {
+        resultsSummary.textContent = "Fichier invalide";
+        resultsBody.innerHTML = `<div class="results-empty"><div class="results-empty-icon">❌</div><div>Ce fichier ne ressemble pas à un export CSV.</div><div style="font-size:0.75rem;">Importe le fichier <strong>zsearcher_export_....csv</strong> téléchargé après une recherche.</div></div>`;
+        return;
+      }
+      lastCsvText = text;
+      lastParsed = parseExportCsv(lastCsvText);
+      renderResults(lastParsed);
+    };
+    reader.readAsText(file);
+  });
+
+  ["dragenter","dragover"].forEach(evt => {
+    resultsBody.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation();
+      resultsBody.classList.add("drag-over");
+    });
+  });
+  ["dragleave","drop"].forEach(evt => {
+    resultsBody.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation();
+      resultsBody.classList.remove("drag-over");
+    });
+  });
+  resultsBody.addEventListener("drop", e => {
+    const dt = e.dataTransfer;
+    if (!dt || !dt.files || !dt.files.length) return;
+    const file = dt.files[0];
+    if (!file.name.toLowerCase().endsWith(".csv")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || "");
+      if (!isLikelyZsearcherCsv(text)) {
+        resultsSummary.textContent = "Fichier invalide";
+        resultsBody.innerHTML = `<div class="results-empty"><div class="results-empty-icon">❌</div><div>Ce fichier ne ressemble pas à un export CSV.</div><div style="font-size:0.75rem;">Glisse-dépose le fichier <strong>zsearcher_export_....csv</strong> téléchargé après une recherche.</div></div>`;
+        return;
+      }
+      lastCsvText = text;
+      lastParsed = parseExportCsv(lastCsvText);
+      renderResults(lastParsed);
+    };
+    reader.readAsText(file);
+  });
+
+  function isLikelyZsearcherCsv(text) {
+    // Heuristiques: la plupart des exports commencent par "# Résultats pour:"
+    // et contiennent des lignes "1," puis un JSON échappé.
+    if (!text) return false;
+    if (text.includes("<!DOCTYPE html>") || text.includes("<script")) return false;
+    const hasHeader = /#\s*R[ée]sultats\s+pour\s*:/i.test(text);
+    const hasRows = /^\s*\d+\s*,/m.test(text);
+    return hasHeader || hasRows;
+  }
+
+  exportCsvBtn.addEventListener("click", () => {
+    if (!lastCsvText) return;
+    const blob = new Blob([lastCsvText], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "zsearcher_export.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  function triggerCsvDownload(url) {
+    // Déclenche un téléchargement en conservant les cookies (sans nouvel onglet)
+    let frame = document.getElementById("downloadFrame");
+    if (!frame) {
+      frame = document.createElement("iframe");
+      frame.id = "downloadFrame";
+      frame.style.display = "none";
+      frame.style.width = "0";
+      frame.style.height = "0";
+      frame.style.border = "0";
+      document.body.appendChild(frame);
+    }
+    frame.src = url;
+  }
+
+  // Téléchargement CSV (puis import manuel / drag&drop)
+  async function runSearchDownload() {
+    const params = buildParamsObject();
+    const queryStr = new URLSearchParams(params).toString();
+    const url = `${EXPORT_BASE_URL}?${queryStr}`;
+    urlPreview.textContent = url;
+
+    resultsSummary.textContent = "Téléchargement…";
+    resultsBody.innerHTML = `
+      <div class="results-empty">
+        <div class="results-empty-icon">⬇️</div>
+        <div>Téléchargement de l’export CSV…</div>
+        <div style="font-size:0.75rem;">Une fois téléchargé, glisse-dépose le fichier ici pour l’afficher.</div>
+      </div>
+    `;
+    triggerCsvDownload(url);
+  }
+
+  searchBtn.addEventListener("click", () => {
+    runSearchDownload();
+  });
+
+  // Entrée = Rechercher (sauf dans l'import fichier)
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    const active = document.activeElement;
+    if (active && active.tagName === "TEXTAREA") return;
+    e.preventDefault();
+    runSearchDownload();
+  });
+
+  // Reset et copier URL
+  resetBtn.addEventListener("click", () => {
+    document.querySelectorAll("[data-param]").forEach(i => i.value = "");
+    fuzzyCheckbox.checked = false;
+    updateUrlPreview();
+    resultsBody.innerHTML = `<div class="results-empty"><div class="results-empty-icon">🔍</div><div>Aucun résultat pour l’instant.</div></div>`;
+    resultsSummary.textContent = "0 résultat.";
+  });
+
+  copyUrlBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(urlPreview.textContent || "").then(() => {
+      urlCopied.classList.add("show");
+      setTimeout(() => urlCopied.classList.remove("show"), 1500);
+    });
+  });
+
+  function updateUrlPreview() {
+    const params = buildParamsObject();
+    urlPreview.textContent = `${EXPORT_BASE_URL}?${new URLSearchParams(params).toString()}`;
+  }
+
+</script>
+</body>
+</html>
